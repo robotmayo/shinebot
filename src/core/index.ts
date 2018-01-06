@@ -3,7 +3,8 @@ import log from "../util/logger";
 import wrap from "../util/wrap";
 import { Result } from "@robotmayo/result-option";
 
-export type WhenListener = (shinebot: Shinebot) => Promise<Result<any, Error>>;
+export type WhenListener = (arg: any, shinebot: Shinebot) => Promise<any>;
+export type When = (evt: string, whenListener: WhenListener) => void;
 
 export default class Shinebot {
   registry: Map<
@@ -17,6 +18,7 @@ export default class Shinebot {
     this.client = client;
     this.token = token;
     this.registry = new Map();
+    this.plugins = new Map();
   }
 
   addPlugin(plugin: Plugin) {
@@ -25,6 +27,7 @@ export default class Shinebot {
   }
 
   async ready() {
+    log.info("Ready, starting plugins");
     const pluginsReady = await wrap(
       Promise.all(
         Array.from(this.plugins.values()).map(p =>
@@ -32,7 +35,6 @@ export default class Shinebot {
         )
       )
     );
-
     if (pluginsReady.isErr()) {
       log.error("error initializing plugin(s)", pluginsReady.unwrapErr());
       try {
@@ -50,21 +52,27 @@ export default class Shinebot {
       const pluginsListeners = registered.map(r => {
         return { l: r.listener, plugin: r.plugin };
       });
-      this.client.on(e, async arg => {
+      this.client.on(e, async (arg: any) => {
         pluginsListeners.forEach(async pl => {
-          const res = await pl.l(this);
-          if (res.isErr()) {
-            log.error("Error in plugin", { event: e, plugin: pl.plugin.name });
+          try {
+            await pl.l(arg, this);
+          } catch (err) {
+            log.error("Error in plugin", {
+              event: e,
+              plugin: pl.plugin.name,
+              err
+            });
           }
         });
       });
     });
+    log.info("Initialization complete");
   }
 
   whenRegistar(
     plugin: Plugin
   ): ((evt: string, whenListener: WhenListener) => void) {
-    return function(evt: string, whenListener: WhenListener) {
+    return (event: string, whenListener: WhenListener) => {
       let eventList = this.registry.get(event);
       if (!eventList) {
         this.registry.set(event, [{ event, plugin, listener: whenListener }]);
@@ -75,6 +83,7 @@ export default class Shinebot {
   }
 
   init() {
+    log.info("Logging in");
     this.client.once("ready", this.ready.bind(this));
     return this.client.login(this.token);
   }
@@ -85,7 +94,6 @@ export interface Command {
   help: string;
   desc: string;
   name: string;
-  fn: (message: Discord.Message, shinebot: Shinebot) => Result<void, Error>;
 }
 
 export interface Plugin {
@@ -93,9 +101,6 @@ export interface Plugin {
   displayName: string;
   desc: string;
   commands: Command[];
-  ready: (
-    when: (evt: string, whenListener: WhenListener) => void,
-    shinebot: Shinebot
-  ) => Result<void, Error>;
+  ready: (when: When, shinebot: Shinebot) => Promise<Result<any, Error>>;
   [props: string]: any;
 }

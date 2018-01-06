@@ -1,7 +1,7 @@
-import log from "./logger";
+import log from "./util/logger";
 import { Ok, Err, Result } from "@robotmayo/result-option";
 import * as pg from "pg";
-import wrap from "./wrap";
+import wrap from "./util/wrap";
 
 export const db = new pg.Pool({
   connectionString: process.env.PG_CONNECTION_STRING
