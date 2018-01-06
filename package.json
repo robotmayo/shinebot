@@ -1,0 +1,29 @@
+{
+  "name": "shinebot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "ava",
+    "build:dev": "tsc -w",
+    "launch:devdb": "docker run --name shinebot -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres",
+    "stop:devdb": "docker stop shinebot",
+    "restart:devdb": "docker restart shinebot"
+  },
+  "author": "robotmayo",
+  "license": "MIT",
+  "dependencies": {
+    "@openfin/snog": "^1.0.1",
+    "@robotmayo/result-option": "^1.0.0",
+    "discord.js": "^11.2.1",
+    "pg": "^7.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^8.5.2",
+    "@types/pg": "^7.4.1",
+    "ava": "^0.24.0",
+    "db-migrate": "^0.10.2",
+    "db-migrate-pg": "^0.2.5",
+    "typescript": "^2.6.2"
+  }
+}
