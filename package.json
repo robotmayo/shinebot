@@ -8,7 +8,10 @@
     "build:dev": "tsc -w",
     "launch:devdb": "docker run --name shinebot -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres",
     "stop:devdb": "docker stop shinebot",
-    "restart:devdb": "docker restart shinebot"
+    "restart:devdb": "docker restart shinebot",
+    "migrate:dev": "db-migrate up --env dev",
+    "start:dev": "nodemon build/index.js",
+    "start:psql": "docker run -it --rm --link shinebot:postgres postgres psql -h postgres -U postgres"
   },
   "author": "robotmayo",
   "license": "MIT",
@@ -16,14 +19,18 @@
     "@openfin/snog": "^1.0.1",
     "@robotmayo/result-option": "^1.0.0",
     "discord.js": "^11.2.1",
+    "dotenv": "^4.0.0",
+    "moment": "^2.20.1",
     "pg": "^7.4.0"
   },
   "devDependencies": {
+    "@types/dotenv": "^4.0.2",
     "@types/node": "^8.5.2",
     "@types/pg": "^7.4.1",
     "ava": "^0.24.0",
     "db-migrate": "^0.10.2",
     "db-migrate-pg": "^0.2.5",
+    "nodemon": "^1.14.8",
     "typescript": "^2.6.2"
   }
 }
