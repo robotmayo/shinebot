@@ -16,6 +16,7 @@ export function isCommand(prefix: string, cmd: string) {
     next: Function
   ) {
     if (!message.content.startsWith(prefix)) return;
-    message.content === prefix + cmd ? next(message) : 0;
+    const tkns = message.content.split(" ");
+    tkns[0] === prefix + cmd ? next(message) : 0;
   };
 }
