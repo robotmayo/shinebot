@@ -5,12 +5,20 @@ import middleware, { isCommand } from "../middleware";
 import log from "../util/logger";
 import run from "../db";
 import * as moment from "moment";
+import wrapPromise from "../util/wrap";
 
 const daily: Command = {
-  desc: "Rolls a completely fair die",
+  desc: "Collects daily shine",
   help: "",
-  name: "fair-dice-roll",
+  name: "daily",
   trigger: "daily"
+};
+
+const bet: Command = {
+  desc: "Start a new bet",
+  help: "",
+  name: "bet",
+  trigger: "bet"
 };
 
 function lastDaily(userID: string) {
@@ -43,19 +51,49 @@ async function addShines(userID: string, value: number) {
 }
 
 export default class Shines implements Plugin {
-  desc = "Rolls a completely fair die";
+  desc = "Shines point system";
   displayName = "Shines";
   name = "shines";
-  commands = [daily];
+  commands = [daily, bet];
   constructor() {}
   ready(when: When, shinebot: Shinebot): Promise<Result<None<void>, Error>> {
-    const m = middleware(
+    const dailyMiddleware = middleware(
       isCommand("$", daily.trigger),
       this.canDaily.bind(this),
       this.doDaily.bind(this)
     );
-    when("message", m);
+    when("message", dailyMiddleware);
+    when(
+      "message",
+      middleware(isCommand("$", bet.trigger), this.startBet.bind(this))
+    );
+    console.log("FUCK ME");
     return Promise.resolve(new Ok(new None()));
+  }
+
+  async startBet(msg: Discord.Message) {
+    const tokens = msg.content.split(" ");
+    const shineCount = parseInt(tokens[1], 10);
+    log.debug({ shineCount, tokens });
+    if (isNaN(shineCount)) {
+      const r = await wrapPromise(
+        msg.reply(
+          "Incorrect format Shines must be a number. Format is: $bet X shines message..."
+        )
+      );
+      if (r.isErr()) {
+        return log.error("Unable to reply", { err: r.unwrapErr() });
+      }
+      return;
+    }
+
+    if (tokens[2] !== "shines") {
+      const r = await wrapPromise(
+        msg.reply("Incorrect format. Format is: $bet X shines message...")
+      );
+      if (r.isErr()) log.error("Unable to reply", { err: r.unwrapErr() });
+      return;
+    }
   }
 
   async canDaily(msg: Discord.Message, next: Function) {
