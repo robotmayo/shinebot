@@ -6,12 +6,14 @@
   "scripts": {
     "test": "ava",
     "build:dev": "tsc -w",
-    "launch:devdb": "docker run --name shinebot -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres",
+    "launch:devdb":
+      "docker run --name shinebot -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres",
     "stop:devdb": "docker stop shinebot",
     "restart:devdb": "docker restart shinebot",
     "migrate:dev": "db-migrate up --env dev",
     "start:dev": "nodemon build/index.js",
-    "start:psql": "docker run -it --rm --link shinebot:postgres postgres psql -h postgres -U postgres"
+    "start:psql":
+      "docker run -it --rm --link shinebot:postgres postgres psql -h postgres -U postgres"
   },
   "author": "robotmayo",
   "license": "MIT",

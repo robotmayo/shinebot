@@ -67,18 +67,21 @@ export default class Shines implements Plugin {
       "message",
       middleware(isCommand("$", bet.trigger), this.startBet.bind(this))
     );
-    console.log("FUCK ME");
     return Promise.resolve(new Ok(new None()));
   }
 
   async startBet(msg: Discord.Message) {
     const tokens = msg.content.split(" ");
     const shineCount = parseInt(tokens[1], 10);
+    const betMessage = tokens
+      .slice(3)
+      .join(" ")
+      .trim();
     log.debug({ shineCount, tokens });
     if (isNaN(shineCount)) {
       const r = await wrapPromise(
         msg.reply(
-          "Incorrect format Shines must be a number. Format is: $bet X shines message..."
+          "Shines must be a number. Format is: $bet X shines message..."
         )
       );
       if (r.isErr()) {
@@ -89,10 +92,31 @@ export default class Shines implements Plugin {
 
     if (tokens[2] !== "shines") {
       const r = await wrapPromise(
-        msg.reply("Incorrect format. Format is: $bet X shines message...")
+        msg.reply("Missing shines text. Format is: $bet X shines message...")
       );
       if (r.isErr()) log.error("Unable to reply", { err: r.unwrapErr() });
       return;
+    }
+
+    if (betMessage === "") {
+      const r = await wrapPromise(
+        msg.reply("Missing bet message. Format is: $bet X shines message...")
+      );
+      if (r.isErr()) log.error("Unable to reply", { err: r.unwrapErr() });
+      return;
+    }
+    const sendResult = await wrapPromise(
+      msg.channel.send("Starting a new bet")
+    );
+    if (sendResult.isErr()) {
+      log.error("Issue starting bet");
+      return;
+    }
+    let reactResult = await wrapPromise(
+      (sendResult.unwrap() as Discord.Message).react("👍")
+    );
+    if (reactResult.isErr()) {
+      return log.error("unable to react", { err: reactResult.unwrapErr() });
     }
   }
 
